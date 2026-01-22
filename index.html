@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>QR Chữ Rơi</title>
+
+<style>
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: black;
+    touch-action: none;
+}
+
+/* TIÊU ĐỀ */
+#title {
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+    font-weight: 900;
+    font-size: 52px;
+    letter-spacing: 2px;
+    opacity: 0;
+    animation: fadeIn 2s forwards;
+    z-index: 10;
+}
+
+#title span {
+    display: block;
+    font-size: 36px;
+    margin-top: 10px;
+}
+
+@keyframes fadeIn {
+    to { opacity: 1; }
+}
+
+/* CHỮ RƠI */
+.word {
+    position: absolute;
+    font-size: 22px;
+    white-space: nowrap;
+    pointer-events: none;
+    transform-style: preserve-3d;
+    transition: color 2s linear;
+}
+</style>
+</head>
+
+<body>
+
+<div id="title">
+    HAPPY BIRTHDAY
+    <span>🎉 CỤC CƯNG CỦA EM 🎉</span>
+</div>
+
+<script>
+const texts = [
+    "Vợ Yêu Anh ❤️",
+    "Về nhà cẩn thận anh nhé 🌸",
+    "Em là nhà của anh 🌈",
+    "Anh là của em 🔥"
+];
+
+const pastelColors = [
+    "#ffd6e0", "#c8f7dc", "#d6e4ff", "#fff1c1", "#f3d1ff"
+];
+
+const words = [];
+const MAX_WORDS = 130;
+
+let lastX = 0;
+let rotateYScene = 0;
+
+// TẠO CHỮ / TIM
+function spawnWord() {
+    if (words.length >= MAX_WORDS) return;
+
+    const isHeart = Math.random() < 0.25; // ❤️ 25%
+    const div = document.createElement("div");
+    div.className = "word";
+
+    div.innerText = isHeart ? "❤️" :
+        texts[Math.floor(Math.random() * texts.length)];
+
+    div.style.fontSize = isHeart ? "28px" : "22px";
+
+    // GIÃN NGANG
+    let x = lastX + 120 + Math.random() * 80;
+    if (x > window.innerWidth - 150) x = Math.random() * 100;
+    lastX = x;
+
+    const z = Math.random() * 400 - 200;
+
+    div.style.left = x + "px";
+    div.style.top = "-40px";
+    div.style.color = pastelColors[Math.floor(Math.random() * pastelColors.length)];
+
+    document.body.appendChild(div);
+
+    words.push({
+        el: div,
+        y: -40,
+        z: z,
+        speed: 0.5 + Math.random() * 1.0
+    });
+}
+
+// BẮT ĐẦU RƠI SAU TIÊU ĐỀ
+setTimeout(() => {
+    setInterval(spawnWord, 230);
+}, 2600);
+
+// VUỐT / KÉO XOAY KHÔNG GIAN
+let isDragging = false;
+let startX = 0;
+
+document.addEventListener("pointerdown", e => {
+    isDragging = true;
+    startX = e.clientX;
+});
+
+document.addEventListener("pointermove", e => {
+    if (!isDragging) return;
+    rotateYScene += (e.clientX - startX) * 0.03;
+    startX = e.clientX;
+});
+
+document.addEventListener("pointerup", () => isDragging = false);
+
+// ANIMATION
+function animate() {
+    for (let i = words.length - 1; i >= 0; i--) {
+        const w = words[i];
+        w.y += w.speed;
+
+        // mờ dần khi rơi
+        const opacity = Math.max(0, 1 - w.y / window.innerHeight);
+        w.el.style.opacity = opacity;
+
+        const ry = Math.sin(w.y / 80) * 8 + rotateYScene;
+        const rx = Math.cos(w.y / 100) * 5;
+
+        w.el.style.top = w.y + "px";
+        w.el.style.transform =
+            `translateZ(${w.z}px) rotateY(${ry}deg) rotateX(${rx}deg)`;
+
+        // đổi màu pastel chậm
+        if (Math.random() < 0.01) {
+            w.el.style.color =
+                pastelColors[Math.floor(Math.random() * pastelColors.length)];
+        }
+
+        if (w.y > window.innerHeight + 60) {
+            w.el.remove();
+            words.splice(i, 1);
+        }
+    }
+    requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+
+</body>
+</html>
+
